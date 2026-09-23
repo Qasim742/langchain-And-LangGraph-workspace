@@ -14,17 +14,43 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.text(message["content"])
 
-user_input = st.chat_input("Type your message here...")
+# user_input = st.chat_input("Type your message here...")
 
-if user_input:
+# if user_input:
 
-    st.session_state.messages.append({"role": "user", "content": user_input})
-    with st.chat_message("user"):
-        st.text(user_input)
+#     st.session_state.messages.append({"role": "user", "content": user_input})
+#     with st.chat_message("user"):
+#         st.text(user_input)
 
-    # Get the assistant's response
-    response = chatbot.invoke({"messages": [HumanMessage(content=user_input)]} , config=CONFIG)
-    ai_response = response["messages"][-1].content
-    st.session_state.messages.append({"role": "assistant", "content": ai_response })
-    with st.chat_message("assistant"):
-        st.text(ai_response)  # Placeholder for the assistant's response
+#     # Get the assistant's response
+#     response = chatbot.invoke({"messages": [HumanMessage(content=user_input)]} , config=CONFIG)
+#     ai_response = response["messages"][-1].content
+#     st.session_state.messages.append({"role": "assistant", "content": ai_response })
+#     with st.chat_message("assistant"):
+#         st.text(ai_response)  # Placeholder for the assistant's response
+
+
+ 
+# 1. Capture user input 
+user_input = st.chat_input("Type a message...") 
+ 
+if user_input: 
+   # 2. Render user message 
+   st.chat_message("user").write(user_input) 
+    
+   # 3. Stream assistant response inside chat_message UI container 
+   with st.chat_message("assistant"): 
+       # Pass a generator yielding content directly into st.write_stream 
+       ai_message = st.write_stream( 
+           message_chunk.content  
+           for message_chunk, metadata in chatbot.stream( 
+               {"messages": [HumanMessage(content=user_input)]}, 
+               config=CONFIG, 
+               stream_mode="messages" 
+           ) 
+           if message_chunk.content 
+       ) 
+    
+   # 4. Save the completed response string back into Streamlit's session state 
+   st.session_state.messages.append({"role": "assistant", "content": ai_message}) 
+ 
